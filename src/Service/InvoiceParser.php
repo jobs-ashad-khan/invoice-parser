@@ -40,22 +40,22 @@ class InvoiceParser
                 $this->em->flush();
             }
         } elseif (str_contains($fp, 'csv')) {   //Pour les json
-
-
-            $d = array_map(function($r) {
-                return str_getcsv($r, "\t");
-            }, file($fp));
-            $c = 0;
-                while(true){
-                if(isset($d[$c])){
-                    $this->em->getConnection()->executeStatement(
-                        "UPDATE invoice SET amount = {$d[$c][0]} WHERE name = '{$d[$c][2]}'"
-                    );
-                    $c++;
-                }else{
-                    break;
+            if (($handle = fopen($fp, 'r')) !== false) {
+                while (($data = fgetcsv($handle, 1000, "\t")) !== false) {
+                    $invoice = $invoiceRepository->findOneByName($data[2]);
+                    if (!$invoice) {
+                        $invoice = new Invoice();
+                        $invoice->setName($data[2]);
+                        $invoice->setCurrency($data[1]);
+                    }
+    
+                    $invoice->setAmount(floatval($data[0]));
+                    $invoice->setCurrency($data[1]);
+                    $this->em->persist($invoice);
+                    $this->em->flush();
                 }
-                }
+                fclose($handle);
+            }    
         }
     }
 }
