@@ -6,5 +6,5 @@ namespace App\Service\Parser;
 
 interface InvoiceParserInterface
 {
-    public function parse(string $path);
+    public function parse(string $path): array;
 }
